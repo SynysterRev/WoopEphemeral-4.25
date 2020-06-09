@@ -47,36 +47,37 @@ AGolemProjectCharacter::AGolemProjectCharacter()
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
-	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
-
 	// Configure character movement
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input..
-		GetCharacterMovement()->RotationRate = FRotator(0.0f, 1620.0f, 0.0f); // ...at this rotation rate
+		/*GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input..
+		GetCharacterMovement()->RotationRate = FRotator(0.0f, 1620.0f, 0.0f); // ...at this rotation rate*/
 		GetCharacterMovement()->JumpZVelocity = 600.f;
 		GetCharacterMovement()->AirControl = 0.2f;
 	}
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	/*CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	if (CameraBoom)
 	{
 		CameraBoom->SetupAttachment(RootComponent);
 		CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character
 		CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-	}
+	}*/
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	if (FollowCamera)
-	{
-		FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-		FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-	}
+	FollowCamera->SetupAttachment(GetCapsuleComponent()); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	FollowCamera->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
+	FollowCamera->bUsePawnControlRotation = true; // Camera does not rotate relative to arm
+
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
+	Mesh1P->SetOnlyOwnerSee(true);
+	Mesh1P->SetupAttachment(FollowCamera);
+	Mesh1P->bCastDynamicShadow = false;
+	Mesh1P->CastShadow = false;
+	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
+	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character)
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)

@@ -20,7 +20,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	class AGolemProjectCharacter* m_character;
+	class ACharacterControllerFPS* m_character;
 
 	class UCharacterMovementComponent* CharacterMovementCmpt;
 

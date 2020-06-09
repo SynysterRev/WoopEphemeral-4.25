@@ -49,10 +49,7 @@ void UGrappleComponent::BeginPlay()
 			mIdBone = mSkeletalMesh->GetBoneIndex("hand_r");
 		}
 	}
-	if (UChildActorComponent* child = HelperLibrary::GetComponentByName<UChildActorComponent>(mCharacter, "ShoulderCamera"))
-	{
-		mCamera = HelperLibrary::GetComponentByName<UCameraComponent>(child->GetChildActor(), "Camera");
-	}
+
 	IsFiring = false;
 	world = GetWorld();
 
@@ -67,7 +64,7 @@ void UGrappleComponent::BeginPlay()
 			PlayerCameraManager = ctrl->PlayerCameraManager;
 		}
 
-		mCharacter->GetCustomCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UGrappleComponent::OnBeginOverlap);
+		//mCharacter->GetCustomCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UGrappleComponent::OnBeginOverlap);
 	}
 	isColorRed = true;
 	HasCreatedTarget = false;

@@ -53,6 +53,9 @@ private:
 
 	bool WantToAim;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+		class USkeletalMeshComponent* Mesh1P;
+
 	UPROPERTY()
 		class UUserWidget* currentSightWidget = nullptr;
 
