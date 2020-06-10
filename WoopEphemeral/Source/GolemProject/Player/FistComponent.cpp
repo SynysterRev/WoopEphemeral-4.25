@@ -111,6 +111,7 @@ void UFistComponent::GoToDestination()
 			{
 				FHitResult hitResult;
 				FCollisionQueryParams collisionQueryParems;
+				//check if there's a wall to adjust the accuracy
 				FVector end = mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistance;
 				bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,
 					ECC_Visibility, collisionQueryParems);
@@ -129,6 +130,7 @@ void UFistComponent::GoToDestination()
 				currentProjectile = nullptr;
 				world->GetTimerManager().SetTimer(TimerHandleFire, this, &UFistComponent::ResetFire, (maxDistance / speedMax) + 0.60f, false);
 				CanFire = false;
+
 				mCharacter->FireEvent();
 				mCharacter->OnFireProjectile.Broadcast();
 
@@ -161,7 +163,7 @@ void UFistComponent::ResetFire()
 void UFistComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	//change hud color to do..
+	//change hud color.. to do..
 	if (mCharacter)
 	{
 		UpdateIKArm();

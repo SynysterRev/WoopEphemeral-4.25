@@ -2,7 +2,7 @@
 
 
 #include "HealthComponent.h"
-#include "GolemProjectCharacter.h"
+#include "CharacterControllerFPS.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Helpers/HelperLibrary.h"
 #include "GameFramework/PlayerController.h"
@@ -24,20 +24,18 @@ void UHealthComponent::BeginPlay()
 	Super::BeginPlay();
 	if (AActor* owner = GetOwner())
 	{
-		Player = Cast<AGolemProjectCharacter>(owner);
+		Player = Cast<ACharacterControllerFPS>(owner);
 		if (Player)
 		{
 			PlayerController = Cast<APlayerController>(Player->GetController());
 		}
 	}
-	CanTakeDamage = true;
 	Life = MaxLife;
+	CanTakeDamage = true;
 	if (Player != nullptr)
 	{
-		LastPositionGrounded = Player->GetActorLocation();
 		PositionCheckPoint = Player->GetActorLocation();
 	}
-	IsFallingDown = false;
 	bIsDead = false;
 }
 
@@ -48,10 +46,8 @@ void UHealthComponent::InflictDamage(int _damage)
 	{
 		Life -= _damage;
 		CanTakeDamage = false;
-		HelperLibrary::Print(FString::FromInt(Life));
 		if (Life <= 0)
 		{
-			OnCharacterDie.Broadcast();
 			bIsDead = true;
 			Life = 0;
 			if (UWorld* world = GetWorld())
@@ -60,64 +56,24 @@ void UHealthComponent::InflictDamage(int _damage)
 			}
 			if (PlayerController != nullptr && Player != nullptr)
 			{
-				Player->ActivateDeath(true);
+				Player->ActivateDeath();
 				Player->DisableInput(PlayerController);
 				Player->Event_Death();
-			}
-		}
-		else
-		{
-			if (UWorld* world = GetWorld())
-			{
-				world->GetTimerManager().SetTimer(TimerHandlerInvul, this, &UHealthComponent::ResetInvulnerability, TimerInvulnerability, false);
 			}
 		}
 	}
 }
 
-void UHealthComponent::ResetInvulnerability()
-{
-	CanTakeDamage = true;
-}
-
 void UHealthComponent::Respawn()
 {
+	OnCharacterDie.Broadcast();
 	Life = MaxLife;
 	CanTakeDamage = true;
 	if (PlayerController != nullptr && Player != nullptr)
 	{
 		Player->EnableInput(PlayerController);
 		Player->Destroy();
-		//Player->SetActorLocation(PositionCheckPoint);
-		////Player->ActivateDeath(false);
-		//IsFallingDown = false;
-		//bIsDead = false;
-		////Player->ResetMeshOnRightPlace();
 	}
-}
-
-void UHealthComponent::RespawnFromFalling()
-{
-	CanTakeDamage = true;
-	if (PlayerController != nullptr && Player != nullptr)
-	{
-		Player->EnableInput(PlayerController);
-		IsFallingDown = false;
-		Player->SetActorLocation(PositionCheckPoint);
-	}
-}
-
-void UHealthComponent::KillCharacterFromFalling()
-{
-	IsFallingDown = true;
-	InflictDamage(FallDamage);
-	if (bIsDead) return;
-
-	RespawnFromFalling();
-	/*if (UWorld* world = GetWorld())
-	{
-		world->GetTimerManager().SetTimer(TimerHandlerRespawn, this, &UHealthComponent::RespawnFromFalling, 1.f, false);
-	}*/
 }
 
 // Called every frame
@@ -125,24 +81,21 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Player != nullptr && !IsFallingDown)
+	if (Player != nullptr)
 	{
+		//if player fall kill him
 		if (Player->GetActorLocation().Z <= -1000.0f)
 		{
-			KillCharacterFromFalling();
+			InflictDamage(5);
 		}
 	}
-}
-
-void UHealthComponent::SetLastPositionGrounded(FVector _lastPositionGrounded)
-{
-	LastPositionGrounded = _lastPositionGrounded;
 }
 
 void UHealthComponent::SetPositionCheckPoint(FVector _positionCheckPoint)
 {
 	PositionCheckPoint = _positionCheckPoint;
 }
+
 void UHealthComponent::SetLife(int _Life)
 {
 	Life = _Life;

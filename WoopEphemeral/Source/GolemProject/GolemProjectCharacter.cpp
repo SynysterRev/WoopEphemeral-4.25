@@ -147,10 +147,10 @@ void AGolemProjectCharacter::BeginPlay()
 		initialGroundFriction = GetCharacterMovement()->GroundFriction;
 	}
 	pc = Cast<APlayerController>(GetController());
-	if (HealthComponent)
+	/*if (HealthComponent)
 	{
 		HealthComponent->SetLastPositionGrounded(GetActorLocation());
-	}
+	}*/
 	if (pc)
 	{
 		pc->bShowMouseCursor = showCursor;
