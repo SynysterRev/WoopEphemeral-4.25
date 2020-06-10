@@ -16,7 +16,7 @@ class GOLEMPROJECT_API UFistComponent : public UActorComponent
 	class AFistProjectile* currentProjectile;
 	class USkeletalMeshComponent* mSkeletalMesh;
 	class UCameraComponent* mCamera;
-	class AGolemProjectCharacter* mCharacter;
+	class ACharacterControllerFPS* mCharacter;
 	TArray<class AActor*> HelperAiming;
 	TArray<class UStaticMeshComponent*> HelperAimingMesh;
 	TArray<class AActor*> ActorToIgnore;
@@ -80,17 +80,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void GoToDestination();
 
-	UFUNCTION()
-	void DisplayTrajectory();
-
+	/** Returns the position on the left hand on world**/
 	UFUNCTION()
 	FVector GetHandPosition();
 
-	UFUNCTION()
-	void DeleteHelpingAim();
 
 	FORCEINLINE const FVector& GetDirection() { return mDirection; };
 
+	/** returns the instance of the current projectile**/
 	FORCEINLINE class AFistProjectile* GetProjectile() { return currentProjectile; };
 
 };

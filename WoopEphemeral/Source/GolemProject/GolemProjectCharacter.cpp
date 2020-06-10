@@ -98,10 +98,10 @@ void AGolemProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	//Input left Mouse Click
-	PlayerInputComponent->BindAction("Fire1", IE_Released, this, &AGolemProjectCharacter::Fire);
+	PlayerInputComponent->BindAction("FireFist", IE_Released, this, &AGolemProjectCharacter::Fire);
 
-	PlayerInputComponent->BindAction("Fire2", IE_Pressed, this, &AGolemProjectCharacter::ChangeCameraPressed);
-	PlayerInputComponent->BindAction("Fire2", IE_Released, this, &AGolemProjectCharacter::ChangeCameraReleased);
+	PlayerInputComponent->BindAction("FireGrapple", IE_Pressed, this, &AGolemProjectCharacter::ChangeCameraPressed);
+	PlayerInputComponent->BindAction("FireGrapple", IE_Released, this, &AGolemProjectCharacter::ChangeCameraReleased);
 	PlayerInputComponent->BindAction("ChangeToGrapple", IE_Pressed, this, &AGolemProjectCharacter::ChangeToGrapple);
 	PlayerInputComponent->BindAction("ChangeToFist", IE_Pressed, this, &AGolemProjectCharacter::ChangeToFist);
 
@@ -256,7 +256,7 @@ void AGolemProjectCharacter::Jump()
 		if (!HasAlreadyMove)
 		{
 			HasAlreadyMove = true;
-			OnStartMoving.Broadcast();
+			//OnStartMoving.Broadcast();
 		}
 		Super::Jump();
 	}
@@ -284,7 +284,7 @@ void AGolemProjectCharacter::Dash()
 			if (!HasAlreadyMove)
 			{
 				HasAlreadyMove = true;
-				OnStartMoving.Broadcast();
+				//OnStartMoving.Broadcast();
 			}
 			dashComponent->Dash(direction);
 		}
@@ -344,7 +344,7 @@ void AGolemProjectCharacter::ChangeToGrapple()
 	if (mGrapple != nullptr && mGrapple->GetSwingPhysics()) return;
 	mGrapple->IsTargetingGrapple = true;
 	FistComp->IsTargetingFist = false;
-	OnGrappleEquiped.Broadcast();
+	//OnGrappleEquiped.Broadcast();
 	if (isSightCameraEnabled && pc && sightCamera)
 	{
 		pc->SetViewTargetWithBlend(sightCamera->GetChildActor(), 0.25f);
@@ -356,7 +356,7 @@ void AGolemProjectCharacter::ChangeToFist()
 	if (!isFistSkillEnabled || FistComp == nullptr || mGrapple == nullptr || FistComp && FistComp->IsTargetingFist) return;
 	if (mGrapple != nullptr && mGrapple->GetSwingPhysics()) return;
 
-	OnFistEquiped.Broadcast();
+	//OnFistEquiped.Broadcast();
 	FistComp->IsTargetingFist = true;
 	mGrapple->IsTargetingGrapple = false;
 	if (isSightCameraEnabled && pc && sightCameraL)
@@ -381,7 +381,7 @@ void AGolemProjectCharacter::Fire()
 			if (!HasAlreadyMove)
 			{
 				HasAlreadyMove = true;
-				OnStartMoving.Broadcast();
+				//OnStartMoving.Broadcast();
 			}
 		}
 	}
@@ -393,7 +393,7 @@ void AGolemProjectCharacter::Fire()
 			if (!HasAlreadyMove)
 			{
 				HasAlreadyMove = true;
-				OnStartMoving.Broadcast();
+				//OnStartMoving.Broadcast();
 			}
 		}
 	}
@@ -542,7 +542,7 @@ void AGolemProjectCharacter::MoveForward(float Value)
 		if (!HasAlreadyMove)
 		{
 			HasAlreadyMove = true;
-			OnStartMoving.Broadcast();
+			//OnStartMoving.Broadcast();
 		}
 		AddMovementInput(Direction, Value);
 	}
@@ -601,7 +601,7 @@ void AGolemProjectCharacter::MoveRight(float Value)
 			if (!HasAlreadyMove)
 			{
 				HasAlreadyMove = true;
-				OnStartMoving.Broadcast();
+				//OnStartMoving.Broadcast();
 			}
 			AddMovementInput(Direction, Value);
 		}
@@ -681,8 +681,8 @@ bool AGolemProjectCharacter::IsCharacterDead()
 void AGolemProjectCharacter::ActivateDeath(bool _activate)
 {
 	UCapsuleComponent* capsule = GetCapsuleComponent();
-	if (FistComp)
-		FistComp->DeleteHelpingAim();
+	/*if (FistComp)
+		FistComp->DeleteHelpingAim();*/
 	if (mGrapple)
 	{
 		mGrapple->DeleteHelpingAim();

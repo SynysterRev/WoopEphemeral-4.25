@@ -20,13 +20,13 @@ struct FLaunchInfo
 };
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStartMoving);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGetGrapple);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGetFist);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFireProjectile);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FResetProjectile);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFireGrapple);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FResetGrapple);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStartMoving);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGetGrapple);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGetFist);
+////DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFireProjectile);
+////DECLARE_DYNAMIC_MULTICAST_DELEGATE(FResetProjectile);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFireGrapple);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FResetGrapple);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGrappleEquiped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFistEquiped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHasReachPosition);
@@ -233,10 +233,10 @@ public:
 	FORCEINLINE bool& IsFistSkillEnabled() { return isFistSkillEnabled; };
 
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-		void SetGrappleSkillEnabled(bool _enable) { isGrappleSkillEnabled = _enable; if (_enable)OnGetGrapple.Broadcast(); };
+		void SetGrappleSkillEnabled(bool _enable) { isGrappleSkillEnabled = _enable; /*if (_enable)OnGetGrapple.Broadcast(); */};
 
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-		void SetFistSkillEnabled(bool _enable) { isFistSkillEnabled = _enable; if (_enable)OnGetFist.Broadcast(); };
+		void SetFistSkillEnabled(bool _enable) { isFistSkillEnabled = _enable;/* if (_enable)OnGetFist.Broadcast();*/ };
 
 	void ResetFriction();
 	/** Returns CameraBoom subobject **/
@@ -349,32 +349,32 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void ShowMouseCursor(bool _showCursor) { showCursor = _showCursor; pc->bShowMouseCursor = _showCursor; }
 
-	UPROPERTY(BlueprintAssignable)
-		FStartMoving OnStartMoving;
+	//UPROPERTY(BlueprintAssignable)
+	//	FStartMoving OnStartMoving;
 
-	UPROPERTY(BlueprintAssignable)
-		FGetGrapple OnGetGrapple;
+	//UPROPERTY(BlueprintAssignable)
+	//	FGetGrapple OnGetGrapple;
 
-	UPROPERTY(BlueprintAssignable)
-		FGetFist OnGetFist;
+	//UPROPERTY(BlueprintAssignable)
+	//	FGetFist OnGetFist;
 
-	UPROPERTY(BlueprintAssignable)
-		FFireProjectile OnFireProjectile;
+	////UPROPERTY(BlueprintAssignable)
+	//	//FFireProjectile OnFireProjectile;
 
-	UPROPERTY(BlueprintAssignable)
-		FResetProjectile OnResetProjectile;
+	////UPROPERTY(BlueprintAssignable)
+	//	//FResetProjectile OnResetProjectile;
 
-	UPROPERTY(BlueprintAssignable)
-		FFireGrapple OnFireGrapple;
+	//UPROPERTY(BlueprintAssignable)
+	//	FFireGrapple OnFireGrapple;
 
-	UPROPERTY(BlueprintAssignable)
-		FResetGrapple OnResetGrapple;
+	//UPROPERTY(BlueprintAssignable)
+	//	FResetGrapple OnResetGrapple;
 
-	UPROPERTY(BlueprintAssignable)
-		FGrappleEquiped OnGrappleEquiped;
+	//UPROPERTY(BlueprintAssignable)
+	//	FGrappleEquiped OnGrappleEquiped;
 
-	UPROPERTY(BlueprintAssignable)
-		FFistEquiped OnFistEquiped;
+	//UPROPERTY(BlueprintAssignable)
+	//	FFistEquiped OnFistEquiped;
 
 	UPROPERTY()
 		FHasReachPosition OnLocationReach;

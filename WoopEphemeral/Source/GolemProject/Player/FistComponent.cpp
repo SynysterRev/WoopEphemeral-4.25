@@ -4,7 +4,7 @@
 #include "FistComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
-#include "GolemProjectCharacter.h"
+#include "CharacterControllerFPS.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Helpers/HelperLibrary.h"
@@ -40,11 +40,13 @@ void UFistComponent::BeginPlay()
 	SetTickGroup(ETickingGroup::TG_PostPhysics);
 
 	AActor* owner = GetOwner();
-	mCharacter = Cast<AGolemProjectCharacter>(owner);
-	mSkeletalMesh = mCharacter->GetMesh();
-	mIdBone = mSkeletalMesh->GetBoneIndex("hand_l");
-	UChildActorComponent* child = HelperLibrary::GetComponentByName<UChildActorComponent>(mCharacter, "ShoulderCamera");
-	mCamera = HelperLibrary::GetComponentByName<UCameraComponent>(child->GetChildActor(), "Camera");
+	mCharacter = Cast<ACharacterControllerFPS>(owner);
+
+	if (mCharacter)
+		mSkeletalMesh = mCharacter->GetMesh1P();
+	if (mSkeletalMesh)
+		mIdBone = mSkeletalMesh->GetBoneIndex("hand_l");
+
 	world = GetWorld();
 	CanFire = true;
 	isColorRed = true;
@@ -58,7 +60,7 @@ void UFistComponent::UpdateIKArm()
 		mDirection = offset - mCharacter->GetActorLocation();
 		IKposition = offset;
 		mDirection.Z = 0.0f;
-		
+
 		if (UGrappleComponent* grapple = mCharacter->FindComponentByClass<UGrappleComponent>())
 		{
 			if (USwingPhysic* phys = grapple->GetSwingPhysics())
@@ -88,28 +90,38 @@ FVector UFistComponent::GetHandPosition()
 
 void UFistComponent::SetIKArm(FVector& _lookAt, bool& _isBlend)
 {
-	if (!currentProjectile)
+	/*if (!currentProjectile)
 		_lookAt = IKposition;
 	if (mCharacter)
 	{
 		_isBlend = (mCharacter->GetSightCameraEnabled());
-	}
+	}*/
 }
 
 void UFistComponent::GoToDestination()
 {
 	if (!currentProjectile && CanFire)
 	{
-		if (world && mCamera && mSkeletalMesh)
+		if (world && mSkeletalMesh)
 		{
 			mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
 
 			currentProjectile = world->SpawnActor<AFistProjectile>(fistProjectileClass, mSkeletalMesh->GetBoneTransform(mIdBone));
 			if (currentProjectile)
 			{
-				FVector offset = GetHandPosition() + mCamera->GetForwardVector() * accuracy;
+				FHitResult hitResult;
+				FCollisionQueryParams collisionQueryParems;
+				FVector end = mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistance;
+				bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,
+					ECC_Visibility, collisionQueryParems);
+
+				FVector direction;
+				direction = hit ? (hitResult.ImpactPoint - GetHandPosition()) : (end - GetHandPosition());
+				direction = direction.GetSafeNormal();
+
+				/*FVector offset = GetHandPosition() + mCamera->GetForwardVector() * accuracy;
 				FVector direction = (offset - currentProjectile->GetActorLocation());
-				direction /= direction.Size();
+				direction /= direction.Size();*/
 
 				//currentProjectile->Instigator = mCharacter->GetInstigator();
 				currentProjectile->SetOwner(mCharacter);
@@ -132,15 +144,12 @@ void UFistComponent::GoToDestination()
 	}
 }
 
-void UFistComponent::DisplayTrajectory()
-{
-
-}
-
 void UFistComponent::ResetFire()
 {
+	//allow player to shoot again and update HUD
 	CanFire = true;
 	mCharacter->OnResetProjectile.Broadcast();
+	//unhide bones
 	if (mSkeletalMesh)
 	{
 		mSkeletalMesh->UnHideBone(mIdBone);
@@ -148,168 +157,29 @@ void UFistComponent::ResetFire()
 	}
 }
 
-void UFistComponent::DeleteHelpingAim()
-{
-	if (HelperAiming.Num() != 0)
-	{
-		for (int i = 0; i < HelperAiming.Num(); ++i)
-		{
-			if (HelperAiming[i] != nullptr)
-			{
-				HelperAiming[i]->Destroy();
-			}
-		}
-		HelperAimingMesh.Empty();
-		HelperAiming.Empty();
-		isColorRed = true;
-	}
-}
-
 // Called every frame
 void UFistComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	//change hud color to do..
 	if (mCharacter)
 	{
-		if (IsTargetingFist && mCharacter->GetSightCameraEnabled())
+		UpdateIKArm();
+		if (CanFire && world)
 		{
-			UpdateIKArm();
-			if (CanFire && mCamera && world)
+			CanInteract = false;
+		}
+		if (CanInteract)
+		{
+			if (isColorRed)
 			{
-				FVector end = GetHandPosition() + mCamera->GetForwardVector() * maxDistance;
-				FVector direction = (end - GetHandPosition()).GetSafeNormal();
-				FVector location = GetHandPosition();
-				FVector scale;
-				FRotator rotation = direction.Rotation();
-				CanInteract = false;
-				ActorToIgnore.Empty();
-				for (int i = 0; i < NumberBounce; ++i)
-				{
-					//if helping is not spawn, spawn it
-					if (HelperAiming.Num() <= i)
-					{
-						AActor* actorSpawned = world->SpawnActor<AActor>(HelperAimingClass);
-						HelperAiming.Add(actorSpawned);
-						if (HelperAiming[i] != nullptr)
-							HelperAimingMesh.Add(actorSpawned->FindComponentByClass<UStaticMeshComponent>());
-					}
-					if (HelperAiming[i] != nullptr)
-					{
-						HelperAiming[i]->SetActorLocation(location);
-						FHitResult hitResult;
-						HelperAiming[i]->SetActorRotation(rotation);
-						scale = HelperAiming[i]->GetActorScale3D();
-						FVector distance = direction * maxDistance;
-						scale.Z = distance.Size() / 100.0f;
-						HelperAiming[i]->SetActorScale3D(scale);
-						//raycast to see if there is any obstacle in front of player
-						if (UKismetSystemLibrary::SphereTraceSingle(world, location, end, 11.0f, TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::None, hitResult, true))
-						{
-							ActorToIgnore.Empty();
-							ActorToIgnore.Add(hitResult.GetActor());
-							UPhysicalMaterial* physMat;
-							distance = hitResult.ImpactPoint - location;
-							scale.Z = distance.Size() / 100.0f;
-							HelperAiming[i]->SetActorScale3D(scale);
-							if (hitResult.GetActor() != nullptr)
-							{
-								if (IInteractable* interactable = Cast<IInteractable>(hitResult.GetActor()))
-								{
-									if (interactable->CanBeActivatedByFist)
-										CanInteract = true;
-								}
-								if (AMovingPlatform* platform = Cast<AMovingPlatform>(hitResult.GetActor()))
-								{
-									if (platform->activatedByHand && !platform->HasBeenActivated)
-										CanInteract = true;
-								}
-							}
-							//scale the helping actor to avoid it to going through wall
-							if (hitResult.GetComponent() != nullptr && hitResult.GetComponent()->GetMaterial(0) != nullptr)
-							{
-								physMat = hitResult.GetComponent()->GetMaterial(0)->GetPhysicalMaterial();
-								//if it's a bouncing surface the calculate the direction of bounce 
-								if (physMat != nullptr && physMat->SurfaceType == EPhysicalSurface::SurfaceType2)
-								{
-									direction = direction.MirrorByVector(hitResult.ImpactNormal);
-									end = direction * maxDistance;
-									location = hitResult.ImpactPoint;
-									rotation = direction.Rotation();
-								}
-								else
-								{
-									//stop loop
-									if (HelperAiming.Num() != 0)
-									{
-										for (int j = i + 1; j < HelperAiming.Num(); ++j)
-										{
-											UStaticMeshComponent* staticMeshToDelete = HelperAiming[j]->FindComponentByClass<UStaticMeshComponent>();
-											if (HelperAimingMesh.Contains(staticMeshToDelete))
-												HelperAimingMesh.Remove(staticMeshToDelete);
-											HelperAiming[j]->Destroy();
-											HelperAiming.RemoveAt(j);
-										}
-									}
-									i = NumberBounce;
-								}
-							}
-						}
-					}
-				}
-				if (CanInteract)
-				{
-					if (isColorRed)
-					{
-						for (int i = 0; i < HelperAimingMesh.Num(); ++i)
-						{
-							HelperAimingMesh[i]->SetVectorParameterValueOnMaterials("Color", FVector4(0.0f, 50.0f, 0.0f, 0.0f));
-						}
-						isColorRed = false;
-					}
-				}
-				else
-				{
-					if (!isColorRed)
-					{
-						for (int i = 0; i < HelperAimingMesh.Num(); ++i)
-						{
-							HelperAimingMesh[i]->SetVectorParameterValueOnMaterials("Color", FVector4(50.0f, 0.0f, 0.0f, 0.0f));
-						}
-						isColorRed = true;
-					}
-				}
-			}
-			else
-			{
-				if (HelperAiming.Num() != 0)
-				{
-					for (int i = 0; i < HelperAiming.Num(); ++i)
-					{
-						if (HelperAiming[i] != nullptr)
-						{
-							HelperAiming[i]->Destroy();
-						}
-					}
-					HelperAimingMesh.Empty();
-					HelperAiming.Empty();
-					isColorRed = true;
-				}
+				isColorRed = false;
 			}
 		}
 		else
 		{
-			if (HelperAiming.Num() != 0)
+			if (!isColorRed)
 			{
-				for (int i = 0; i < HelperAiming.Num(); ++i)
-				{
-					if (HelperAiming[i] != nullptr)
-					{
-						HelperAiming[i]->Destroy();
-					}
-				}
-				HelperAimingMesh.Empty();
-				HelperAiming.Empty();
 				isColorRed = true;
 			}
 		}
