@@ -166,7 +166,7 @@ void UFistComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	//change hud color.. to do..
 	if (mCharacter)
 	{
-		UpdateIKArm();
+		//UpdateIKArm();
 		if (CanFire && world)
 		{
 			CanInteract = false;

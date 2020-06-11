@@ -5,7 +5,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SceneComponent.h"
 #include "Helpers/HelperLibrary.h"
-#include "GolemProjectCharacter.h"
+#include "Player/CharacterControllerFPS.h"
 #include "Components/StaticMeshComponent.h"
 
 // Sets default values
@@ -50,7 +50,7 @@ void AProjectile::OverlapDamage(UPrimitiveComponent* OverlappedComponent, AActor
 {
 	if (OverlappedComponent != nullptr && OtherActor != nullptr && OtherComp != nullptr)
 	{
-		if (AGolemProjectCharacter* character = Cast<AGolemProjectCharacter>(OtherActor))
+		if (ACharacterControllerFPS* character = Cast<ACharacterControllerFPS>(OtherActor))
 		{
 			character->InflictDamage(damage);
 		}
