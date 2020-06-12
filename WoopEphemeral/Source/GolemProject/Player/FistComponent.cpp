@@ -52,32 +52,6 @@ void UFistComponent::BeginPlay()
 	isColorRed = true;
 }
 
-void UFistComponent::UpdateIKArm()
-{
-	if (world && mCamera && mCharacter)
-	{
-		FVector offset = mCamera->GetForwardVector() * accuracy;
-		mDirection = offset - mCharacter->GetActorLocation();
-		IKposition = offset;
-		mDirection.Z = 0.0f;
-
-		if (UGrappleComponent* grapple = mCharacter->FindComponentByClass<UGrappleComponent>())
-		{
-			if (USwingPhysic* phys = grapple->GetSwingPhysics())
-			{
-				phys->SetCameraDirection(mDirection);
-				return;
-			}
-		}
-
-		mCharacter->SetActorRotation(mDirection.Rotation());
-
-		//I don't know how anim works in cpp
-		//UAnimInstance* animBp = mSkeletalMesh->GetAnimInstance();
-
-	}
-}
-
 FVector UFistComponent::GetHandPosition()
 {
 	FVector pos = FVector::ZeroVector;
@@ -86,16 +60,6 @@ FVector UFistComponent::GetHandPosition()
 		pos = mSkeletalMesh->GetBoneTransform(mIdBone).GetLocation();
 	}
 	return pos;
-}
-
-void UFistComponent::SetIKArm(FVector& _lookAt, bool& _isBlend)
-{
-	/*if (!currentProjectile)
-		_lookAt = IKposition;
-	if (mCharacter)
-	{
-		_isBlend = (mCharacter->GetSightCameraEnabled());
-	}*/
 }
 
 void UFistComponent::GoToDestination()
@@ -119,15 +83,11 @@ void UFistComponent::GoToDestination()
 				FVector direction;
 				direction = hit ? (hitResult.ImpactPoint - GetHandPosition()) : (end - GetHandPosition());
 				direction = direction.GetSafeNormal();
-
-				/*FVector offset = GetHandPosition() + mCamera->GetForwardVector() * accuracy;
-				FVector direction = (offset - currentProjectile->GetActorLocation());
-				direction /= direction.Size();*/
-
-				//currentProjectile->Instigator = mCharacter->GetInstigator();
 				currentProjectile->SetOwner(mCharacter);
 				currentProjectile->LaunchFist(direction, true, maxDistance, speedMax, mCharacter);
 				currentProjectile = nullptr;
+
+				//launch timer to reset fire
 				world->GetTimerManager().SetTimer(TimerHandleFire, this, &UFistComponent::ResetFire, (maxDistance / speedMax) + 0.60f, false);
 				CanFire = false;
 

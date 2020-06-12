@@ -167,8 +167,8 @@ void AGolemProjectCharacter::BeginPlay()
 		InputComponent->BindAction("AssistedGrapple", IE_Released, mGrapple, &UGrappleComponent::StopClimb);
 	}
 
-	if (FistComp)
-		FistComp->IsTargetingFist = false;
+	/*if (FistComp)
+		FistComp->IsTargetingFist = false;*/
 
 	IsInteracting = false;
 	IsAiming = false;
@@ -312,14 +312,14 @@ void AGolemProjectCharacter::AimAtEndOfWallJump()
 
 void AGolemProjectCharacter::SwitchArm()
 {
-	if (!FistComp->IsTargetingFist)
+	/*if (!FistComp->IsTargetingFist)
 	{
 		ChangeToFist();
-	}
-	else if (!mGrapple->IsTargetingGrapple)
+	}*/
+	/*else if (!mGrapple->IsTargetingGrapple)
 	{
 		ChangeToGrapple();
-	}
+	}*/
 }
 
 void AGolemProjectCharacter::UseAssistedGrapple()
@@ -340,10 +340,10 @@ void AGolemProjectCharacter::UseAssistedGrapple()
 
 void AGolemProjectCharacter::ChangeToGrapple()
 {
-	if (!isGrappleSkillEnabled || FistComp == nullptr || mGrapple == nullptr || mGrapple->IsTargetingGrapple) return;
+	//if (!isGrappleSkillEnabled || FistComp == nullptr || mGrapple == nullptr || mGrapple->IsTargetingGrapple) return;
 	if (mGrapple != nullptr && mGrapple->GetSwingPhysics()) return;
-	mGrapple->IsTargetingGrapple = true;
-	FistComp->IsTargetingFist = false;
+//	mGrapple->IsTargetingGrapple = true;
+	//FistComp->IsTargetingFist = false;
 	//OnGrappleEquiped.Broadcast();
 	if (isSightCameraEnabled && pc && sightCamera)
 	{
@@ -353,12 +353,12 @@ void AGolemProjectCharacter::ChangeToGrapple()
 
 void AGolemProjectCharacter::ChangeToFist()
 {
-	if (!isFistSkillEnabled || FistComp == nullptr || mGrapple == nullptr || FistComp && FistComp->IsTargetingFist) return;
+	//if (!isFistSkillEnabled || FistComp == nullptr || mGrapple == nullptr || FistComp && FistComp->IsTargetingFist) return;
 	if (mGrapple != nullptr && mGrapple->GetSwingPhysics()) return;
 
 	//OnFistEquiped.Broadcast();
-	FistComp->IsTargetingFist = true;
-	mGrapple->IsTargetingGrapple = false;
+	//FistComp->IsTargetingFist = true;
+	//mGrapple->IsTargetingGrapple = false;
 	if (isSightCameraEnabled && pc && sightCameraL)
 	{
 		pc->SetViewTargetWithBlend(sightCameraL->GetChildActor(), 0.25f);
@@ -371,7 +371,7 @@ void AGolemProjectCharacter::Fire()
 	{
 		return;
 	}
-	if (isGrappleSkillEnabled && mGrapple && mGrapple->IsTargetingGrapple)
+	/*if (isGrappleSkillEnabled && mGrapple && mGrapple->IsTargetingGrapple)
 	{
 		mGrapple->Cancel();
 
@@ -384,8 +384,8 @@ void AGolemProjectCharacter::Fire()
 				//OnStartMoving.Broadcast();
 			}
 		}
-	}
-	else if (isFistSkillEnabled && FistComp && FistComp->IsTargetingFist)
+	}*/
+	/*else if (isFistSkillEnabled && FistComp && FistComp->IsTargetingFist)
 	{
 		if (isSightCameraEnabled)
 		{
@@ -396,7 +396,7 @@ void AGolemProjectCharacter::Fire()
 				//OnStartMoving.Broadcast();
 			}
 		}
-	}
+	}*/
 }
 
 void AGolemProjectCharacter::TurnAtRate(float Rate)
@@ -432,7 +432,7 @@ void AGolemProjectCharacter::ChangeCameraPressed()
 	{
 		if (!isSightCameraEnabled)
 		{
-			if (isGrappleSkillEnabled && mGrapple && mGrapple->IsTargetingGrapple)
+			/*if (isGrappleSkillEnabled && mGrapple && mGrapple->IsTargetingGrapple)
 			{
 				pc->SetViewTargetWithBlend(sightCamera->GetChildActor(), 0.25f);
 				isSightCameraEnabled = true;
@@ -451,13 +451,13 @@ void AGolemProjectCharacter::ChangeCameraPressed()
 				/*if (mGrapple->GetSwingPhysics())
 					SlowMoComponent->SetEnableSlowMo();*/
 
-				if (GetCharacterMovement())
+			/*	if (GetCharacterMovement())
 				{
 					GetCharacterMovement()->bOrientRotationToMovement = false;
 				}
 				IsAiming = true;
 				WantToAim = false;
-			}
+			}*/
 
 		}
 	}
@@ -492,12 +492,12 @@ void AGolemProjectCharacter::ChangeCameraReleased()
 void AGolemProjectCharacter::MoveForward(float Value)
 {
 	if (IsDashingDown) return;
-	if (PushingComponent && PushingComponent->GetIsStartingPushingObject() || (mGrapple && mGrapple->GetFiring() && !mGrapple->GetSwingPhysics()))
+	/*if (PushingComponent && PushingComponent->GetIsStartingPushingObject() || (mGrapple && mGrapple->GetFiring() && !mGrapple->GetSwingPhysics()))
 	{
 		return;
-	}
+	}*/
 	m_valueForward = Value;
-	if ((Controller != NULL) && (Value != 0.0f))
+	/*if ((Controller != NULL) && (Value != 0.0f))
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -545,18 +545,18 @@ void AGolemProjectCharacter::MoveForward(float Value)
 			//OnStartMoving.Broadcast();
 		}
 		AddMovementInput(Direction, Value);
-	}
+	}*/
 }
 
 void AGolemProjectCharacter::MoveRight(float Value)
 {
 	if (IsDashingDown) return;
-	if (PushingComponent && PushingComponent->GetIsPushingObject() || (mGrapple && mGrapple->GetFiring() && !mGrapple->GetSwingPhysics()))
+	/*if (PushingComponent && PushingComponent->GetIsPushingObject() || (mGrapple && mGrapple->GetFiring() && !mGrapple->GetSwingPhysics()))
 	{
 		return;
-	}
+	}*/
 	m_valueRight = Value;
-	if ((Controller != NULL) && (Value != 0.0f))
+/*	if ((Controller != NULL) && (Value != 0.0f))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -605,7 +605,7 @@ void AGolemProjectCharacter::MoveRight(float Value)
 			}
 			AddMovementInput(Direction, Value);
 		}
-	}
+	}*/
 }
 
 void AGolemProjectCharacter::ResetFriction()
@@ -685,7 +685,7 @@ void AGolemProjectCharacter::ActivateDeath(bool _activate)
 		FistComp->DeleteHelpingAim();*/
 	if (mGrapple)
 	{
-		mGrapple->DeleteHelpingAim();
+		//mGrapple->DeleteHelpingAim();
 		mGrapple->StopSwingPhysicsOnDeath();
 	}
 	ChangeCameraReleased();

@@ -17,13 +17,9 @@ class GOLEMPROJECT_API UFistComponent : public UActorComponent
 	class USkeletalMeshComponent* mSkeletalMesh;
 	class UCameraComponent* mCamera;
 	class ACharacterControllerFPS* mCharacter;
-	TArray<class AActor*> HelperAiming;
-	TArray<class UStaticMeshComponent*> HelperAimingMesh;
-	TArray<class AActor*> ActorToIgnore;
 	FTimerHandle TimerHandleFire;
 	FVector mDirection;
 	int32 mIdBone;
-	float accuracy = 100000.0f;
 	bool CanFire;
 	bool CanInteract;
 	bool isColorRed;
@@ -41,25 +37,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Projectile, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<class AFistProjectile> fistProjectileClass;
 
-	UPROPERTY(EditAnywhere, Category = Help)
-	TSubclassOf<class AActor> HelperAimingClass;
-
 	UPROPERTY(EditAnywhere, Category = Swing)
 	float pushingForce = 0.0f;
-
-	UFUNCTION(BlueprintCallable)
-	void SetIKArm(FVector& _lookAt, bool& _isBlend);
 
 	UPROPERTY(EditAnywhere)
 	float TimerFire = 1.0f;
 
-	UFUNCTION()
-	void UpdateIKArm();
-
 	UPROPERTY()
 	FVector IKposition;
-
-	bool DisplayEnable;
 
 	UPROPERTY(EditAnywhere)
 	int32 NumberBounce;
@@ -74,10 +59,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool IsTargetingFist;
-
 	UFUNCTION(BlueprintCallable)
+	/** Fire the projectile**/
 	void GoToDestination();
 
 	/** Returns the position on the left hand on world**/

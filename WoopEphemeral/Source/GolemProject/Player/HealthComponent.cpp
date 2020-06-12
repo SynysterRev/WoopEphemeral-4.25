@@ -84,7 +84,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (Player != nullptr)
 	{
 		//if player fall kill him
-		if (Player->GetActorLocation().Z <= -1000.0f)
+		if (Player->GetActorLocation().Z <= -1000.0f && !bIsDead)
 		{
 			InflictDamage(5);
 		}
