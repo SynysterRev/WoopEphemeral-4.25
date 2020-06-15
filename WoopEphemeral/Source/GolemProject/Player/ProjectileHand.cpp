@@ -110,7 +110,6 @@ void AProjectileHand::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	}*/
 	if (!bIsComingBack && HitComponent && OtherActor != this)
 	{
-		HelperLibrary::Print("hit");
 		bIsColliding = true;
 		UPhysicalMaterial* physMat;
 		if (Hit.GetComponent() && Hit.GetComponent()->GetMaterial(0))
@@ -126,7 +125,6 @@ void AProjectileHand::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 				}
 				else if (bIsAssisted && physMat->SurfaceType == SurfaceType3)
 				{
-					HelperLibrary::Print("swing");
 					bIsSwingingPossible = true;
 					ImpactEvent();
 					return;
