@@ -419,11 +419,11 @@ void AGolemProjectCharacter::LookUpAtRate(float Rate)
 
 void AGolemProjectCharacter::ChangeCameraPressed()
 {
-	if (WallMechanicalComponent != nullptr && !WallMechanicalComponent->CanAim)
+	/*if (WallMechanicalComponent != nullptr && !WallMechanicalComponent->CanAim)
 	{
 		WantToAim = true;
 		return;
-	}
+	}*/
 	if (PushingComponent && PushingComponent->GetIsPushingObject())
 	{
 		return;
@@ -465,11 +465,11 @@ void AGolemProjectCharacter::ChangeCameraPressed()
 
 void AGolemProjectCharacter::ChangeCameraReleased()
 {
-	if (WallMechanicalComponent != nullptr && !WallMechanicalComponent->CanAim && WantToAim)
+	/*if (WallMechanicalComponent != nullptr && !WallMechanicalComponent->CanAim && WantToAim)
 	{
 		WantToAim = false;
 		return;
-	}
+	}*/
 	if (PushingComponent && PushingComponent->GetIsPushingObject())
 	{
 		return;
