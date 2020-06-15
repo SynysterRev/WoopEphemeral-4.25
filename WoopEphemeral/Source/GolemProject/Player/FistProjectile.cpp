@@ -86,7 +86,7 @@ void AFistProjectile::Tick(float DeltaTime)
 	lastPosition = MeshComponent->GetComponentLocation();*/
 }
 
-void AFistProjectile::LaunchFist(const FVector& _direction, bool _shouldBounce, float _maxDistance, float _maxSpeed, AGolemProjectCharacter* _character)
+void AFistProjectile::LaunchFist(const FVector& _direction, bool _shouldBounce, float _maxDistance, float _maxSpeed, ACharacterControllerFPS* _character)
 {
 	Direction = _direction;
 	if (ProjectileComponent)

@@ -22,7 +22,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		class UStaticMeshComponent* mesh;
 
-	AGolemProjectCharacter* playerActor = nullptr;
+	class AGolemProjectCharacter* playerActor = nullptr;
 	bool useGravity = true;
 	UPROPERTY(BlueprintReadWrite)
 		bool isUsed = false;

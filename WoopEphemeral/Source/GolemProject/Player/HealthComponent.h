@@ -21,47 +21,28 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
 	UPROPERTY(EditAnywhere, Category = "Health", meta = (AllowPrivateAccess = "true"))
-	int MaxLife = 1;
+		int MaxLife = 1;
 	UPROPERTY(EditAnywhere, Category = "Health", meta = (AllowPrivateAccess = "true"))
 	int Life = 1;
 	UPROPERTY(EditAnywhere, Category = "Health", meta = (AllowPrivateAccess = "true"))
-	float TimerInvulnerability = 0.5f;
-	UPROPERTY(EditAnywhere, Category = "Health", meta = (AllowPrivateAccess = "true"))
 	float TimerRespawn = 1.5f;
-
-	UPROPERTY(EditAnywhere, Category = "Health", meta = (AllowPrivateAccess = "true"))
-	int FallDamage = 2;
 
 	bool CanTakeDamage;
 	FTimerHandle TimerHandlerInvul;
 	FTimerHandle TimerHandlerRespawn;
-	class AGolemProjectCharacter* Player;	
+	class ACharacterControllerFPS* Player;
 	class APlayerController* PlayerController;
-	FVector LastPositionGrounded;
 	FVector PositionCheckPoint;
 
 private:
-
-	void ResetInvulnerability();
 	void Respawn();
-	void RespawnFromFalling();
-	void KillCharacterFromFalling();
-	bool IsFallingDown;
 	bool bIsDead;
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-		inline FVector GetLastPositionGrounded() const
-	{
-		return LastPositionGrounded;
-	};
-
-	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	void SetLastPositionGrounded(FVector _lastPositionGrounded);
 
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 		inline FVector GetPositionCheckPoint() const
@@ -81,26 +62,13 @@ public:
 		return Life;
 	};
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
-		inline int GetMaxLife() const
-	{
-		return MaxLife;
-	};
-
-	UFUNCTION(BlueprintCallable, Category = "Health")
-		inline float GetPercentLife() const
-	{
-		return  (float)Life / (float)MaxLife;
-	};
-
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 		void InflictDamage(int _damage);
 		
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		inline bool IsDead() { return bIsDead; }
 
-
-
+	//delegate call on death
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 		FCharacterDie OnCharacterDie;
 };

@@ -3,7 +3,7 @@
 
 #include "DashComponent.h"
 #include <Engine/Engine.h>
-#include "GolemProjectCharacter.h"
+#include "Player/CharacterControllerFPS.h"
 #include "Helpers/HelperLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,7 +25,7 @@ void UDashComponent::BeginPlay()
 	Super::BeginPlay();
 	SetTickGroup(ETickingGroup::TG_PostPhysics);
 	HasDashInAir = false;
-	m_character = Cast<AGolemProjectCharacter>(GetOwner());
+	m_character = Cast<ACharacterControllerFPS>(GetOwner());
 	m_canDash = true;
 	goDown = false;
 	if (m_character != nullptr)

@@ -4,7 +4,7 @@
 #include "GrappleComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
-#include "GolemProjectCharacter.h"
+#include "Player/CharacterControllerFPS.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Helpers/HelperLibrary.h"
@@ -14,13 +14,15 @@
 #include "Player/ProjectileHand.h"
 #include "Classes/Components/StaticMeshComponent.h"
 #include "Interfaces/Targetable.h"
-#include "GolemProjectGameMode.h"
+#include "Player/CharacterControllerFPS.h"
 #include "SwingPhysic.h"
 #include "DashComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Player/Rope.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+#include "GolemProjectGameMode.h"
 
 //#include "DrawDebugHelpers.h"
 
@@ -40,19 +42,16 @@ void UGrappleComponent::BeginPlay()
 	Super::BeginPlay();
 	SetTickGroup(ETickingGroup::TG_PrePhysics);
 	AActor* owner = GetOwner();
-	mCharacter = Cast<AGolemProjectCharacter>(owner);
+	mCharacter = Cast<ACharacterControllerFPS>(owner);
 	if (mCharacter)
 	{
-		mSkeletalMesh = mCharacter->GetMesh();
+		mSkeletalMesh = mCharacter->GetMesh1P();
 		if (mSkeletalMesh)
 		{
 			mIdBone = mSkeletalMesh->GetBoneIndex("hand_r");
 		}
 	}
-	if (UChildActorComponent* child = HelperLibrary::GetComponentByName<UChildActorComponent>(mCharacter, "ShoulderCamera"))
-	{
-		mCamera = HelperLibrary::GetComponentByName<UCameraComponent>(child->GetChildActor(), "Camera");
-	}
+
 	IsFiring = false;
 	world = GetWorld();
 
@@ -81,7 +80,7 @@ void UGrappleComponent::CheckElementTargetable()
 	if (allActors.Num() <= 0) return;
 	TArray<AActor*> actorCloseEnough;
 
-	if (UCameraComponent* followingCam = mCharacter->GetFollowCamera())
+	if (UCameraComponent* followingCam = mCharacter->GetFirstPersonCameraComponent())
 	{
 		if (world)
 		{
@@ -90,7 +89,7 @@ void UGrappleComponent::CheckElementTargetable()
 				if (actor == nullptr || !actor->Implements<UTargetable>()) continue;
 				//get all the actors that are close to the player
 				if (FVector::DistSquared(actor->GetActorLocation(), mCharacter->GetActorLocation()) < maxDistanceSwinging * maxDistanceSwinging &&
-					FVector::DistSquared(actor->GetActorLocation(), mCharacter->GetActorLocation()) > minDistance* minDistance)
+					FVector::DistSquared(actor->GetActorLocation(), mCharacter->GetActorLocation()) > minDistance * minDistance)
 				{
 					actorCloseEnough.Add(actor);
 				}
@@ -106,30 +105,12 @@ void UGrappleComponent::CheckElementTargetable()
 				FromSoftware.Normalize();
 				float dot = FVector::DotProduct(followingCam->GetForwardVector(), FromSoftware);
 				//to change and finish
-				if (dot > minDot&& dot > bestDot)
+				if (dot > minDot && dot > bestDot)
 				{
 					bestDot = dot;
 					ClosestGrapplingHook = actor;
 					haveFoundActor = true;
 					if (bestDot == 1.0f) break;
-					//FHitResult hitResult;
-					//if (world->LineTraceSingleByChannel(hitResult, GetHandPosition(), actor->GetActorLocation(), ECollisionChannel::ECC_Visibility))
-					//{
-					//	if (ClosestGrapplingHook != nullptr && ClosestGrapplingHook == hitResult.GetActor()) return;
-					//	if (ITargetable* target = Cast<ITargetable>(hitResult.GetActor()))
-					//	{
-					//		if (ITargetable* Lasttarget = Cast<ITargetable>(ClosestGrapplingHook))
-					//		{
-					//			Lasttarget->Execute_DestroyHUD(ClosestGrapplingHook);
-					//		}
-					//		target->Execute_CreateHUD(hitResult.GetActor());
-					//		ClosestGrapplingHook = actor;
-					//		
-					//		HelperLibrary::Print("sds");
-					//		if (bestDot == 1.0f) return;
-					//		//return;
-					//	}
-					//}
 				}
 			}
 			if (ClosestGrapplingHook != nullptr)
@@ -179,16 +160,17 @@ void UGrappleComponent::GoToDestination(bool _isAssisted)
 	if (_isAssisted && ClosestGrapplingHook == nullptr || mSkeletalMesh == nullptr) return;
 	if (!currentProjectile)
 	{
-		if (world && mCamera)
+		if (world)
 		{
 			currentProjectile = world->SpawnActor<AProjectileHand>(handProjectileClass, mSkeletalMesh->GetBoneTransform(mIdBone));
 			if (currentProjectile)
 			{
 				mCharacter->GrapplingFireEvent();
-				mCharacter->OnFireGrapple.Broadcast();
+				//mCharacter->OnFireGrapple.Broadcast();
 				mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
-				FVector offset = _isAssisted ? ClosestGrapplingHook->GetActorLocation() : (mCharacter->GetVirtualRightHandPosition() + mCamera->GetForwardVector() * maxDistanceGrappling);
-				FVector direction = (offset - mCharacter->GetVirtualRightHandPosition());
+
+				FVector end = _isAssisted ? ClosestGrapplingHook->GetActorLocation() : (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
+				FVector direction = (end - GetHandPosition());
 				direction.Normalize();
 				if (currentProjectile->GetMeshComponent())
 				{
@@ -223,21 +205,6 @@ void UGrappleComponent::Cancel()
 	}
 }
 
-void UGrappleComponent::SetIKArm(FVector& _lookAt, bool& _isBlend)
-{
-	if (!currentProjectile)
-		_lookAt = IKposition;
-	else if (currentProjectile->GetMeshComponent())
-		_lookAt = currentProjectile->GetLocation();
-	else
-		_lookAt = currentProjectile->GetActorLocation();
-
-	if (mCharacter)
-	{
-		_isBlend = (!IsTargetingGrapple || mCharacter->GetSightCameraEnabled() || currentProjectile);
-	}
-}
-
 FVector UGrappleComponent::GetHandPosition()
 {
 	FVector pos = FVector::ZeroVector;
@@ -248,112 +215,15 @@ FVector UGrappleComponent::GetHandPosition()
 	return pos;
 }
 
-void UGrappleComponent::DisplayHelping()
-{
-	FVector end = mCharacter->GetVirtualRightHandPosition() + mCamera->GetForwardVector() * maxDistanceGrappling;
-	FVector location = mCharacter->GetVirtualRightHandPosition();
-	FVector direction = end - location;
-	FVector scale;
-	FRotator rotation = direction.Rotation();
-	FHitResult hitResult;
-	if (HelperAiming == nullptr)
-	{
-		HelperAiming = world->SpawnActor<AActor>(HelperAimingClass);
-		if (HelperAiming != nullptr)
-			HelperAimingMesh = HelperAiming->FindComponentByClass<UStaticMeshComponent>();
-	}
-	else if (HelperAiming != nullptr)
-	{
-		HelperAiming->SetActorLocation(location);
-		HelperAiming->SetActorRotation(rotation);
-		scale = HelperAiming->GetActorScale3D();
-		FVector distance = direction.GetSafeNormal() * maxDistanceGrappling;
-		scale.Z = distance.Size() / 100.0f;
-		HelperAiming->SetActorScale3D(scale);
-		if (UKismetSystemLibrary::SphereTraceSingle(world, location, end, 6.0f, TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::None, hitResult, true))
-		{
-			UPhysicalMaterial* physMat;
-			if (hitResult.GetComponent() != nullptr && hitResult.GetComponent()->GetMaterial(0))
-			{
-				physMat = hitResult.GetComponent()->GetMaterial(0)->GetPhysicalMaterial();
-				if (physMat != nullptr && physMat->SurfaceType == EPhysicalSurface::SurfaceType1)
-				{
-					if (isColorRed)
-					{
-						HelperAimingMesh->SetVectorParameterValueOnMaterials("Color", FVector4(0.0f, 50.0f, 0.0f, 0.0f));
-						isColorRed = false;
-					}
-				}
-				else
-				{
-					if (!isColorRed)
-					{
-						HelperAimingMesh->SetVectorParameterValueOnMaterials("Color", FVector4(50.0f, 0.0f, 0.0f, 0.0f));
-						isColorRed = true;
-					}
-				}
-				distance = hitResult.ImpactPoint - location;
-				scale.Z = distance.Size() / 100.0f;
-				HelperAiming->SetActorScale3D(scale);
-			}
-		}
-		else
-		{
-			if (!isColorRed)
-			{
-				HelperAimingMesh->SetVectorParameterValueOnMaterials("Color", FVector4(50.0f, 0.0f, 0.0f, 0.0f));
-				isColorRed = true;
-			}
-		}
-	}
-}
-
-void UGrappleComponent::UpdateIKArm()
-{
-	if (world && mCamera && mCharacter)
-	{
-		FVector offset = mCamera->GetForwardVector() * accuracy;
-		mDirection = offset - mCharacter->GetActorLocation();
-		IKposition = offset;
-		mDirection.Z = 0.0f;
-
-		//Rotate character when he is aiming something
-		mCharacter->SetActorRotation(mDirection.Rotation());
-
-		//I don't know how anim works in cpp
-		//UAnimInstance* animBp = mSkeletalMesh->GetAnimInstance();
-	}
-}
-
 // Called every frame
 void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CheckElementTargetable();
-
-	//Update Ik Arm animation
-	if (mCharacter && mCamera)
-	{
-		if (IsTargetingGrapple && mCharacter->GetSightCameraEnabled() && !currentProjectile)
-		{
-			UpdateIKArm();
-			DisplayHelping();
-			isAiming = true;
-		}
-		else
-		{
-			if (HelperAiming != nullptr)
-			{
-				HelperAiming->Destroy();
-				HelperAiming = nullptr;
-				isAiming = false;
-				isColorRed = true;
-			}
-		}
-	}
+	
 	if (currentProjectile && currentProjectile->GetMeshComponent() && mSkeletalMesh)
 	{
-		mDirection = currentProjectile->GetLocation() - mCharacter->GetVirtualRightHandPosition();
+		mDirection = currentProjectile->GetLocation() - GetHandPosition();
 		mDistance += FVector::Dist(mLastLocation, currentProjectile->GetLocation());
 		float distanceWithCharacter = mDirection.Size();
 		mLastLocation = currentProjectile->GetLocation();
@@ -391,10 +261,9 @@ void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 				if (!swingPhysic && ClosestGrapplingHook)
 				{
 					mCharacter->StartSwingEvent();
-					mCharacter->ChangeToFist();
 
 					swingPhysic = new USwingPhysic(this);
-					
+
 					swingPhysic->SetScaleGravity(scaleGravity);
 					swingPhysic->SetFriction(friction);
 					swingPhysic->SetForceMovement(forceMovement);
@@ -447,7 +316,6 @@ void UGrappleComponent::StopSwingPhysics(const bool& _comingBack)
 {
 	if (swingPhysic && currentProjectile)
 	{
-		HelperLibrary::Print("destroyswing");
 		bIsAssisted = false;
 		bDestroyCustomPhy = true;
 		IsSwinging = false;
@@ -481,24 +349,13 @@ bool UGrappleComponent::CheckGround(FVector _impactNormal)
 	{
 		if (rope && _impactNormal.Z > angle)
 		{
-				FRotator rotFinal = FRotator::ZeroRotator;
-				rotFinal.Yaw = mCharacter->GetActorRotation().Yaw;
-				mCharacter->SetActorRotation(rotFinal);
-				bStopSwingPhysics = true;
+			FRotator rotFinal = FRotator::ZeroRotator;
+			rotFinal.Yaw = mCharacter->GetActorRotation().Yaw;
+			mCharacter->SetActorRotation(rotFinal);
+			bStopSwingPhysics = true;
 		}
 	}
 	return bStopSwingPhysics;
-}
-
-void UGrappleComponent::DeleteHelpingAim()
-{
-	if (HelperAiming != nullptr)
-	{
-		HelperAiming->Destroy();
-		HelperAiming = nullptr;
-		isAiming = false;
-		isColorRed = true;
-	}
 }
 
 void UGrappleComponent::PlayerIsNear()
@@ -532,7 +389,7 @@ void UGrappleComponent::PlayerIsNear()
 		rope = nullptr;
 		currentProjectile = nullptr;
 		IsFiring = false;
-		mCharacter->OnResetGrapple.Broadcast();
+		//mCharacter->OnResetGrapple.Broadcast();
 	}
 }
 
