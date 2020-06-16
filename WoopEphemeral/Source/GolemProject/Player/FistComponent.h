@@ -15,12 +15,10 @@ class GOLEMPROJECT_API UFistComponent : public UActorComponent
 
 	class UWorld* world;
 	class AFistProjectile* currentProjectile;
-	class USkeletalMeshComponent* mSkeletalMesh;
 	class UCameraComponent* mCamera;
 	class ACharacterControllerFPS* mCharacter;
 	FTimerHandle TimerHandleFire;
 	FVector mDirection;
-	int32 mIdBone;
 	bool CanFire;
 
 private :
@@ -45,9 +43,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float TimerFire = 1.0f;
 
-	UPROPERTY()
-	FVector IKposition;
-
 	UPROPERTY(EditAnywhere)
 	int32 NumberBounce;
 
@@ -63,12 +58,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	/** Fire the projectile**/
-	void GoToDestination();
-
-	/** Returns the position on the left hand on world**/
-	UFUNCTION()
-	FVector GetHandPosition();
-
+	void GoToDestination(FTransform _spawningTransform);
 
 	FORCEINLINE const FVector& GetDirection() { return mDirection; };
 

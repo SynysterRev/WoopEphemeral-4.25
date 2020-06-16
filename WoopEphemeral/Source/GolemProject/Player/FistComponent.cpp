@@ -38,34 +38,19 @@ void UFistComponent::BeginPlay()
 	AActor* owner = GetOwner();
 	mCharacter = Cast<ACharacterControllerFPS>(owner);
 
-	if (mCharacter)
-		mSkeletalMesh = mCharacter->GetMesh1P();
-	if (mSkeletalMesh)
-		mIdBone = mSkeletalMesh->GetBoneIndex("hand_l");
-
 	world = GetWorld();
 	CanFire = true;
 }
 
-FVector UFistComponent::GetHandPosition()
-{
-	FVector pos = FVector::ZeroVector;
-	if (mSkeletalMesh)
-	{
-		pos = mSkeletalMesh->GetBoneTransform(mIdBone).GetLocation();
-	}
-	return pos;
-}
-
-void UFistComponent::GoToDestination()
+void UFistComponent::GoToDestination(FTransform _spawningTransform)
 {
 	if (!currentProjectile && CanFire)
 	{
-		if (world && mSkeletalMesh)
+		if (world)
 		{
-			mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
+			//mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
 
-			currentProjectile = world->SpawnActor<AFistProjectile>(fistProjectileClass, mSkeletalMesh->GetBoneTransform(mIdBone));
+			currentProjectile = world->SpawnActor<AFistProjectile>(fistProjectileClass, _spawningTransform);
 			if (currentProjectile)
 			{
 				FHitResult hitResult;
@@ -76,7 +61,7 @@ void UFistComponent::GoToDestination()
 					ECC_Visibility, collisionQueryParems);
 
 				FVector direction;
-				direction = hit ? (hitResult.ImpactPoint - GetHandPosition()) : (end - GetHandPosition());
+				direction = hit ? (hitResult.ImpactPoint - _spawningTransform.GetLocation()) : (end - _spawningTransform.GetLocation());
 				direction = direction.GetSafeNormal();
 				currentProjectile->SetOwner(mCharacter);
 				currentProjectile->LaunchFist(direction, true, maxDistance, speedMax, mCharacter);
@@ -106,12 +91,6 @@ void UFistComponent::ResetFire()
 	//allow player to shoot again and update HUD
 	CanFire = true;
 	mCharacter->OnResetProjectile.Broadcast();
-	//unhide bones
-	if (mSkeletalMesh)
-	{
-		mSkeletalMesh->UnHideBone(mIdBone);
-		mSkeletalMesh->bRequiredBonesUpToDate = false;
-	}
 }
 
 void UFistComponent::CheckElementInteractableHitable()
