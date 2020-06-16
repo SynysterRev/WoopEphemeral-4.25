@@ -170,7 +170,14 @@ void UGrappleComponent::GoToDestination(bool _isAssisted)
 				mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
 
 				FVector end = _isAssisted ? ClosestGrapplingHook->GetActorLocation() : (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
-				FVector direction = (end - GetHandPosition());
+				//FVector direction = (end - GetHandPosition());
+				FHitResult hitResult;
+				FCollisionQueryParams collisionQueryParems;
+				bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,
+					ECC_Visibility, collisionQueryParems);
+
+				FVector direction;
+				direction = hit ? (hitResult.ImpactPoint - GetHandPosition()) : (end - GetHandPosition());
 				direction.Normalize();
 				if (currentProjectile->GetMeshComponent())
 				{
