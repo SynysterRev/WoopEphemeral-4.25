@@ -37,4 +37,6 @@ public:
 		const bool Desactivate(AActor* caller);
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Activable")
 		const bool Switch(AActor* caller);
+
+	bool CanBeActivatedByFist;
 };

@@ -6,21 +6,17 @@
 #include "Kismet/GameplayStatics.h"
 #include "CharacterControllerFPS.h"
 #include "Engine/Engine.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Helpers/HelperLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "Classes/Components/SkeletalMeshComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Player/ProjectileHand.h"
 #include "Classes/Components/StaticMeshComponent.h"
 #include "Interfaces/Targetable.h"
-#include "GolemProjectGameMode.h"
 #include "Player/FistProjectile.h"
-#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "DrawDebugHelpers.h"
 #include "GrappleComponent.h"
 #include "SwingPhysic.h"
-#include "Objects/MovingPlatform.h"
+#include "Interfaces/Interactable.h"
+#include "Interfaces/Activable.h"
 
 // Sets default values for this component's properties
 UFistComponent::UFistComponent()
@@ -49,7 +45,6 @@ void UFistComponent::BeginPlay()
 
 	world = GetWorld();
 	CanFire = true;
-	isColorRed = true;
 }
 
 FVector UFistComponent::GetHandPosition()
@@ -119,32 +114,46 @@ void UFistComponent::ResetFire()
 	}
 }
 
+void UFistComponent::CheckElementInteractableHitable()
+{
+	FHitResult hitResult;
+	FCollisionQueryParams collisionQueryParems;
+	//check if there's a wall to adjust the accuracy
+	FVector end = mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistance;
+	bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,
+		ECC_Visibility, collisionQueryParems);
+	if (hit)
+	{
+		if (IInteractable* interactable = Cast<IInteractable>(hitResult.GetActor()))
+		{
+			if (interactable->CanBeActivatedByFist)
+				OnInteractableCouldBeHit.Broadcast();
+			else
+				OnNothingInteractableCouldBeHit.Broadcast();
+		}
+		else if (IActivable* activable = Cast<IActivable>(hitResult.GetActor()))
+		{
+			if (activable->CanBeActivatedByFist)
+				OnInteractableCouldBeHit.Broadcast();
+			else
+				OnNothingInteractableCouldBeHit.Broadcast();
+		}
+		else
+		{
+			OnNothingInteractableCouldBeHit.Broadcast();
+		}
+	}
+	else
+	{
+		OnNothingInteractableCouldBeHit.Broadcast();
+	}
+}
+
 // Called every frame
 void UFistComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	//change hud color.. to do..
-	if (mCharacter)
-	{
-		//UpdateIKArm();
-		if (CanFire && world)
-		{
-			CanInteract = false;
-		}
-		if (CanInteract)
-		{
-			if (isColorRed)
-			{
-				isColorRed = false;
-			}
-		}
-		else
-		{
-			if (!isColorRed)
-			{
-				isColorRed = true;
-			}
-		}
-	}
+	CheckElementInteractableHitable();
 }
 

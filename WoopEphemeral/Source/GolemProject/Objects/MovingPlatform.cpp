@@ -122,7 +122,7 @@ void AMovingPlatform::Init()
 	{
 		isCollidingWithPlayer = true;
 	}
-
+	CanBeActivatedByFist = activatedByHand;
 }
 
 void AMovingPlatform::Tick(float DeltaTime)

@@ -6,7 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "GrappleComponent.generated.h"
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCanHitSomethingGrappable);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNothingGrapplableHit);
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class GOLEMPROJECT_API UGrappleComponent : public UActorComponent
 {
@@ -112,6 +113,9 @@ protected:
 	UFUNCTION()
 	void PlayerIsNear();
 
+	UFUNCTION()
+	void CheckElementGrappable();
+
 public:
 	UPROPERTY()
 	FVector IKposition;
@@ -165,4 +169,10 @@ public:
 	void SetClimb(bool _isClimbing);
 
 	void StopClimb();
+
+	UPROPERTY(BlueprintAssignable)
+	FCanHitSomethingGrappable OnGrappableCouldBeHit;
+
+	UPROPERTY(BlueprintAssignable)
+	FNothingGrapplableHit OnNothingGrappableCouldBeHit;
 };

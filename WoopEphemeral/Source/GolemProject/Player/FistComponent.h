@@ -6,7 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "FistComponent.generated.h"
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCanHitSomethingInteractable);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNothingInteractableHit);
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GOLEMPROJECT_API UFistComponent : public UActorComponent
 {
@@ -21,11 +22,12 @@ class GOLEMPROJECT_API UFistComponent : public UActorComponent
 	FVector mDirection;
 	int32 mIdBone;
 	bool CanFire;
-	bool CanInteract;
-	bool isColorRed;
 
 private :
 	void ResetFire();
+
+	void CheckElementInteractableHitable();
+
 public:	
 	// Sets default values for this component's properties
 	UFistComponent();
@@ -72,5 +74,11 @@ public:
 
 	/** returns the instance of the current projectile**/
 	FORCEINLINE class AFistProjectile* GetProjectile() { return currentProjectile; };
+
+	UPROPERTY(BlueprintAssignable)
+	FCanHitSomethingInteractable OnInteractableCouldBeHit;
+
+	UPROPERTY(BlueprintAssignable)
+	FNothingInteractableHit OnNothingInteractableCouldBeHit;
 
 };

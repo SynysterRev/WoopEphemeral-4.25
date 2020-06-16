@@ -170,7 +170,14 @@ void UGrappleComponent::GoToDestination(bool _isAssisted)
 				mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
 
 				FVector end = _isAssisted ? ClosestGrapplingHook->GetActorLocation() : (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
-				FVector direction = (end - GetHandPosition());
+				//FVector direction = (end - GetHandPosition());
+				FHitResult hitResult;
+				FCollisionQueryParams collisionQueryParems;
+				bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,
+					ECC_Visibility, collisionQueryParems);
+
+				FVector direction;
+				direction = hit ? (hitResult.ImpactPoint - GetHandPosition()) : (end - GetHandPosition());
 				direction.Normalize();
 				if (currentProjectile->GetMeshComponent())
 				{
@@ -220,7 +227,7 @@ void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CheckElementTargetable();
-	
+	CheckElementGrappable();
 	if (currentProjectile && currentProjectile->GetMeshComponent() && mSkeletalMesh)
 	{
 		mDirection = currentProjectile->GetLocation() - GetHandPosition();
@@ -393,6 +400,41 @@ void UGrappleComponent::PlayerIsNear()
 	}
 }
 
+void UGrappleComponent::CheckElementGrappable()
+{
+	FVector end = (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
+	//FVector direction = (end - GetHandPosition());
+	FHitResult hitResult;
+	FCollisionQueryParams collisionQueryParems;
+	bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,
+		ECC_Visibility, collisionQueryParems);
+
+	UPhysicalMaterial* physMat;
+	if (hit && hitResult.GetComponent() && hitResult.GetComponent()->GetMaterial(0))
+	{
+		physMat = hitResult.GetComponent()->GetMaterial(0)->GetPhysicalMaterial();
+		if (physMat != nullptr)
+		{
+			if (physMat->SurfaceType == SurfaceType1)
+			{
+				OnGrappableCouldBeHit.Broadcast();
+			}
+			else
+			{
+				OnNothingGrappableCouldBeHit.Broadcast();
+			}
+		}
+		else
+		{
+			OnNothingGrappableCouldBeHit.Broadcast();
+		}
+	}
+	else
+	{
+		OnNothingGrappableCouldBeHit.Broadcast();
+	}
+}
+
 void UGrappleComponent::AttractCharacter()
 {
 	FVector tempDir;
@@ -464,7 +506,6 @@ void UGrappleComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AAct
 			{
 				if (swingPhysic)
 				{
-					HelperLibrary::Print(HitResult.GetComponent()->GetPathName());
 					StopSwingPhysics();
 				}
 				return;
