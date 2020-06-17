@@ -43,14 +43,6 @@ void UGrappleComponent::BeginPlay()
 	SetTickGroup(ETickingGroup::TG_PrePhysics);
 	AActor* owner = GetOwner();
 	mCharacter = Cast<ACharacterControllerFPS>(owner);
-	if (mCharacter)
-	{
-		mSkeletalMesh = mCharacter->GetMesh1P();
-		if (mSkeletalMesh)
-		{
-			mIdBone = mSkeletalMesh->GetBoneIndex("hand_r");
-		}
-	}
 
 	IsFiring = false;
 	world = GetWorld();
@@ -68,7 +60,6 @@ void UGrappleComponent::BeginPlay()
 
 		mCharacter->GetCustomCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &UGrappleComponent::OnBeginOverlap);
 	}
-	isColorRed = true;
 	HasCreatedTarget = false;
 }
 
@@ -131,7 +122,7 @@ void UGrappleComponent::CheckElementTargetable()
 						return;
 					}
 				}
-				if (world->LineTraceSingleByChannel(hitResult, GetHandPosition(), ClosestGrapplingHook->GetActorLocation(), ECollisionChannel::ECC_Visibility))
+				if (world->LineTraceSingleByChannel(hitResult, mSpawningTransform.GetLocation(), ClosestGrapplingHook->GetActorLocation(), ECollisionChannel::ECC_Visibility))
 				{
 					if (LastClosestGrapplingHook == hitResult.GetActor()) return;
 					ITargetable* Lasttarget = Cast<ITargetable>(LastClosestGrapplingHook);
@@ -155,19 +146,19 @@ void UGrappleComponent::CheckElementTargetable()
 }
 
 //launch projectile
-void UGrappleComponent::GoToDestination(bool _isAssisted)
+void UGrappleComponent::GoToDestination(bool _isAssisted, FTransform _spawningTransform)
 {
-	if (_isAssisted && ClosestGrapplingHook == nullptr || mSkeletalMesh == nullptr) return;
+	if (_isAssisted && ClosestGrapplingHook == nullptr) return;
 	if (!currentProjectile)
 	{
 		if (world)
 		{
-			currentProjectile = world->SpawnActor<AProjectileHand>(handProjectileClass, mSkeletalMesh->GetBoneTransform(mIdBone));
+			mSpawningTransform = _spawningTransform;
+			currentProjectile = world->SpawnActor<AProjectileHand>(handProjectileClass, mSpawningTransform);
 			if (currentProjectile)
 			{
 				mCharacter->GrapplingFireEvent();
 				//mCharacter->OnFireGrapple.Broadcast();
-				mSkeletalMesh->HideBone(mIdBone, EPhysBodyOp::PBO_None);
 
 				FVector end = _isAssisted ? ClosestGrapplingHook->GetActorLocation() : (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
 				//FVector direction = (end - GetHandPosition());
@@ -177,7 +168,7 @@ void UGrappleComponent::GoToDestination(bool _isAssisted)
 					ECC_Visibility, collisionQueryParems);
 
 				FVector direction;
-				direction = hit ? (hitResult.ImpactPoint - GetHandPosition()) : (end - GetHandPosition());
+				direction = hit ? (hitResult.ImpactPoint - mSpawningTransform.GetLocation()) : (end - mSpawningTransform.GetLocation());
 				direction.Normalize();
 				if (currentProjectile->GetMeshComponent())
 				{
@@ -190,6 +181,7 @@ void UGrappleComponent::GoToDestination(bool _isAssisted)
 				currentProjectile->SetOwner(mCharacter);
 				currentProjectile->LaunchProjectile(direction, this);
 				IsFiring = true;
+				bCanMove = false;
 				bIsAssisted = _isAssisted;
 				currentProjectile->SetAssisted(_isAssisted);
 
@@ -212,14 +204,11 @@ void UGrappleComponent::Cancel()
 	}
 }
 
-FVector UGrappleComponent::GetHandPosition()
+const FVector UGrappleComponent::GetSpawningLocation()
 {
-	FVector pos = FVector::ZeroVector;
-	if (mSkeletalMesh)
-	{
-		pos = mSkeletalMesh->GetBoneTransform(mIdBone).GetLocation();
-	}
-	return pos;
+	if (mCharacter) 
+		return mCharacter->GetSpawningGrappleTransform().GetLocation();
+	return FVector::ZeroVector;
 }
 
 // Called every frame
@@ -228,9 +217,9 @@ void UGrappleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CheckElementTargetable();
 	CheckElementGrappable();
-	if (currentProjectile && currentProjectile->GetMeshComponent() && mSkeletalMesh)
+	if (currentProjectile && currentProjectile->GetMeshComponent())
 	{
-		mDirection = currentProjectile->GetLocation() - GetHandPosition();
+		mDirection = currentProjectile->GetLocation() - mCharacter->GetSpawningGrappleTransform().GetLocation();
 		mDistance += FVector::Dist(mLastLocation, currentProjectile->GetLocation());
 		float distanceWithCharacter = mDirection.Size();
 		mLastLocation = currentProjectile->GetLocation();
@@ -377,12 +366,6 @@ void UGrappleComponent::PlayerIsNear()
 		}
 		mCharacter->ResetFriction();
 
-		if (mSkeletalMesh)
-		{
-			mSkeletalMesh->UnHideBone(mIdBone);
-			mSkeletalMesh->bRequiredBonesUpToDate = false;
-		}
-
 		if (rope)
 			rope->Destroy();
 
@@ -396,6 +379,7 @@ void UGrappleComponent::PlayerIsNear()
 		rope = nullptr;
 		currentProjectile = nullptr;
 		IsFiring = false;
+		bCanMove = true;
 		//mCharacter->OnResetGrapple.Broadcast();
 	}
 }
@@ -403,7 +387,6 @@ void UGrappleComponent::PlayerIsNear()
 void UGrappleComponent::CheckElementGrappable()
 {
 	FVector end = (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
-	//FVector direction = (end - GetHandPosition());
 	FHitResult hitResult;
 	FCollisionQueryParams collisionQueryParems;
 	bool hit = world->LineTraceSingleByChannel(hitResult, mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation(), end,

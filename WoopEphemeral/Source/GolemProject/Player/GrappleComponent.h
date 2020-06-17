@@ -16,7 +16,6 @@ class GOLEMPROJECT_API UGrappleComponent : public UActorComponent
 private:
 	class UWorld* world;
 	class ACharacterControllerFPS* mCharacter;
-	class USkeletalMeshComponent* mSkeletalMesh;
 	class AProjectileHand* currentProjectile;
 	class AActor* ClosestGrapplingHook;
 	class AActor* LastClosestGrapplingHook;
@@ -24,19 +23,20 @@ private:
 	class APlayerCameraManager* PlayerCameraManager;
 	class USwingPhysic* swingPhysic = nullptr;
 	class ARope* rope = nullptr;
-	bool isColorRed;
 	bool HasCreatedTarget;
 
 	FVector mDestination;
 	FVector mDirection;
 	FVector mLastLocation;
+	FTransform mSpawningTransform;
 
 	int32 mIdBone;
 	bool bIsAssisted = false;
 	bool bIsClimbing = false;
 	bool bIsAttracting = false;
 	bool bDestroyCustomPhy = false;
-	bool IsFiring;
+	bool bCanMove = true;
+	bool IsFiring = false;
 
 	//values to edit
 	UPROPERTY(EditAnywhere, Category = "Swing Physics", meta = (AllowPrivateAccess = "true"))
@@ -124,7 +124,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	/** Fire the grapple if true for swinging**/
-	void GoToDestination(bool _isAssisted);
+	void GoToDestination(bool _isAssisted, FTransform _spawningTransform);
 
 	UFUNCTION()
 	void Cancel();
@@ -139,8 +139,7 @@ public:
 	/** Return the projectile if there'is one**/
 	FORCEINLINE class AProjectileHand* GetProjectile() { return currentProjectile; };
 
-	UFUNCTION(BlueprintCallable)
-	FVector GetHandPosition();
+	const FVector GetSpawningLocation();
 
 	UFUNCTION(BlueprintCallable)
 	/** Return the closest target where player can use his grapple**/
@@ -169,6 +168,10 @@ public:
 	void SetClimb(bool _isClimbing);
 
 	void StopClimb();
+
+	void SetCanMove(bool _canMove) { bCanMove = _canMove; }
+
+	bool CanMove() { return bCanMove; }
 
 	UPROPERTY(BlueprintAssignable)
 	FCanHitSomethingGrappable OnGrappableCouldBeHit;

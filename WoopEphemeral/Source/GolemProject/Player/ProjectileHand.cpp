@@ -45,7 +45,7 @@ void AProjectileHand::SetComingBack(const bool& _isComingBack)
 		bIsColliding = false;
 		if (meshComponent != nullptr)
 		{
-			meshComponent->SetCollisionProfileName(TEXT("NoCollision"));
+			meshComponent->SetCollisionProfileName(TEXT("ProjectileComeBack"));
 		}
 
 		if (AGolemProjectCharacter* character = Cast<AGolemProjectCharacter>(GetOwner()))
@@ -87,7 +87,7 @@ void AProjectileHand::Tick(float DeltaTime)
 
 		if (grappleComponent && !grappleComponent->GetSwingPhysics() && meshComponent && ProjectileComponent)
 		{
-			FVector dir = grappleComponent->GetHandPosition() - meshComponent->GetComponentLocation();
+			FVector dir = grappleComponent->GetSpawningLocation() - meshComponent->GetComponentLocation();
 			dir.Normalize();
 			ProjectileComponent->Velocity = dir * velocity;
 		}
@@ -125,6 +125,7 @@ void AProjectileHand::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 				}
 				else if (bIsAssisted && physMat->SurfaceType == SurfaceType3)
 				{
+					grappleComponent->SetCanMove(true);
 					bIsSwingingPossible = true;
 					ImpactEvent();
 					return;
