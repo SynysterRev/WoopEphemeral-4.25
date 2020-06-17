@@ -333,8 +333,8 @@ void AGolemProjectCharacter::UseAssistedGrapple()
 		{
 			mGrapple->SetClimb(true);
 		}
-		else
-			mGrapple->GoToDestination(true);
+		/*else
+			mGrapple->GoToDestination(true, m);*/
 	}
 }
 
