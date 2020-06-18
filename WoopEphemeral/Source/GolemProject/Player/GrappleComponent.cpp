@@ -9,10 +9,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Helpers/HelperLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "Classes/Components/SkeletalMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Player/ProjectileHand.h"
-#include "Classes/Components/StaticMeshComponent.h"
 #include "Interfaces/Targetable.h"
 #include "Player/CharacterControllerFPS.h"
 #include "SwingPhysic.h"
@@ -67,6 +65,7 @@ void UGrappleComponent::CheckElementTargetable()
 {
 	if (mCharacter == nullptr) return;
 	if (GameMode == nullptr) return;
+	//get all the actors targetable in the level
 	TArray<AActor*> allActors = GameMode->GetActorsTargetable();
 	if (allActors.Num() <= 0) return;
 	TArray<AActor*> actorCloseEnough;
@@ -95,7 +94,7 @@ void UGrappleComponent::CheckElementTargetable()
 				FVector FromSoftware = (actor->GetActorLocation() - mCharacter->GetActorLocation());
 				FromSoftware.Normalize();
 				float dot = FVector::DotProduct(followingCam->GetForwardVector(), FromSoftware);
-				//to change and finish
+				//we keep the object that is the nearest of the middle of the screen
 				if (dot > minDot && dot > bestDot)
 				{
 					bestDot = dot;
@@ -107,6 +106,7 @@ void UGrappleComponent::CheckElementTargetable()
 			if (ClosestGrapplingHook != nullptr)
 			{
 				FHitResult hitResult;
+				//if there is no target close we destroy the last hud if there is one
 				if (actorCloseEnough.Num() == 0 || !haveFoundActor)
 				{
 					if (!IsFiring)
@@ -122,6 +122,7 @@ void UGrappleComponent::CheckElementTargetable()
 						return;
 					}
 				}
+				//if the grapple can reach the target then we destroy the last target HUD and create a HUD on the new one
 				if (world->LineTraceSingleByChannel(hitResult, mSpawningTransform.GetLocation(), ClosestGrapplingHook->GetActorLocation(), ECollisionChannel::ECC_Visibility))
 				{
 					if (LastClosestGrapplingHook == hitResult.GetActor()) return;
@@ -158,7 +159,7 @@ void UGrappleComponent::GoToDestination(bool _isAssisted, FTransform _spawningTr
 			if (currentProjectile)
 			{
 				mCharacter->GrapplingFireEvent();
-				//mCharacter->OnFireGrapple.Broadcast();
+				mCharacter->OnFireGrapple.Broadcast();
 
 				FVector end = _isAssisted ? ClosestGrapplingHook->GetActorLocation() : (mCharacter->GetFirstPersonCameraComponent()->GetComponentLocation() + mCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * maxDistanceGrappling);
 				//FVector direction = (end - GetHandPosition());
@@ -359,7 +360,6 @@ void UGrappleComponent::PlayerIsNear()
 	if (mCharacter)
 	{
 		//Find destination stop player
-
 		if (mCharacter->GetCharacterMovement() && currentProjectile->IsCollidingGrappling())
 		{
 			mCharacter->GetCharacterMovement()->Velocity *= stopScaleVelocity;
@@ -380,7 +380,7 @@ void UGrappleComponent::PlayerIsNear()
 		currentProjectile = nullptr;
 		IsFiring = false;
 		bCanMove = true;
-		//mCharacter->OnResetGrapple.Broadcast();
+		mCharacter->OnResetGrapple.Broadcast();
 	}
 }
 
