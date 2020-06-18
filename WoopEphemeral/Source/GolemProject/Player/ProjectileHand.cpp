@@ -115,6 +115,7 @@ void AProjectileHand::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 		if (Hit.GetComponent() && Hit.GetComponent()->GetMaterial(0))
 		{
 			physMat = Hit.GetComponent()->GetMaterial(0)->GetPhysicalMaterial();
+			//check material to define if grapple could be use or not
 			if (physMat != nullptr)
 			{
 				if (!bIsAssisted && physMat->SurfaceType == SurfaceType1)

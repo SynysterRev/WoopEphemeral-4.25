@@ -50,6 +50,7 @@ public:
 		return PositionCheckPoint;
 	};
 
+	/** register position of the last checkpoint enter (maybe register transform?)**/
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void SetPositionCheckPoint(FVector _positionCheckPoint);
 

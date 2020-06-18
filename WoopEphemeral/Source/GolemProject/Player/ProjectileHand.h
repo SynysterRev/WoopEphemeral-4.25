@@ -42,8 +42,10 @@ public:
 
 	FORCEINLINE	void SetColliding(const bool& _isColliding) { bIsGrapplingPossible = _isColliding; };
 	
+	/** is grapple used to tow**/
 	FORCEINLINE const bool& IsCollidingGrappling() { return bIsGrapplingPossible; };
 
+	/** is grapple used to swing**/
 	FORCEINLINE const bool& IsCollidingSwinging() { return bIsSwingingPossible; };
 
 	FORCEINLINE void SetCollidingSwinging(const bool& _enable) { bIsSwingingPossible = _enable; };
@@ -52,8 +54,10 @@ public:
 
 	void SetComingBack(const bool& _isComingBack);
 
+	/** Is grapple coming back to character**/
 	FORCEINLINE const bool& IsComingBack() { return bIsComingBack; };
 
+	/** Grapple will be used to swing or not**/
 	FORCEINLINE void SetAssisted(const bool& _isAssisted) { bIsAssisted = _isAssisted; }
 
 	UFUNCTION()

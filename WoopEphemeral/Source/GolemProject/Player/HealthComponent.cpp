@@ -67,13 +67,13 @@ void UHealthComponent::InflictDamage(int _damage)
 void UHealthComponent::Respawn()
 {
 	OnCharacterDie.Broadcast();
-	Life = MaxLife;
+	/*Life = MaxLife;
 	CanTakeDamage = true;
 	if (PlayerController != nullptr && Player != nullptr)
 	{
 		Player->EnableInput(PlayerController);
 		Player->Destroy();
-	}
+	}*/
 }
 
 // Called every frame

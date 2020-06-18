@@ -139,12 +139,14 @@ public:
 	/** Return the projectile if there'is one**/
 	FORCEINLINE class AProjectileHand* GetProjectile() { return currentProjectile; };
 
+	/** Returns the location where the grapple spawn when fires**/
 	const FVector GetSpawningLocation();
 
 	UFUNCTION(BlueprintCallable)
 	/** Return the closest target where player can use his grapple**/
 	FORCEINLINE class AActor* GetClosestGrapplingHook() { return ClosestGrapplingHook; };
 
+	/** Returns the custom swingPhysic**/
 	FORCEINLINE class USwingPhysic* GetSwingPhysics() { return swingPhysic; };
 
 	UFUNCTION()
@@ -161,6 +163,7 @@ public:
 
 	void StopSwingPhysicsOnDeath();
 		
+	/** Use to stop swing when we touch the ground**/
 	bool CheckGround(FVector _impactNormal);
 
 	bool IsSwinging;
@@ -170,7 +173,8 @@ public:
 	void StopClimb();
 
 	void SetCanMove(bool _canMove) { bCanMove = _canMove; }
-
+	
+	//use to jnow if the camera can move or not
 	bool CanMove() { return bCanMove; }
 
 	UPROPERTY(BlueprintAssignable)
